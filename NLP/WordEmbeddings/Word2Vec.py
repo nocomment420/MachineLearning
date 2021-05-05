@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
-from WordEmbedding import WordEmbeddingModel
+from WordEmbeddingModel import WordEmbeddingModel
 import random
 
 
-class Word2VecModel(WordEmbeddingModel.WordEmbeddingModel):
+class Word2VecModel(WordEmbeddingModel):
     def __init__(self, V, D):
         super().__init__(V, D, savePath="Word2VecModel")
 
@@ -38,7 +38,7 @@ class Word2VecModel(WordEmbeddingModel.WordEmbeddingModel):
         np.save("{}/context_words.npy".format(self.save_path), context_words)
         self.save_dic(word2indx, "{}/word2idx.json".format(self.save_path))
         self.save_dic({"context_size": context_size}, "{}/info.json".format(self.save_path))
-
+        self.word2idx = word2indx
     def load_skip_grams(self):
         pos_words = np.load("{}/pos_words.npy".format(self.save_path))
         neg_words = np.load("{}/neg_words.npy".format(self.save_path))
@@ -46,7 +46,7 @@ class Word2VecModel(WordEmbeddingModel.WordEmbeddingModel):
         word2indx = self.load_dic("{}/word2idx.json".format(self.save_path))
         info = self.load_dic("{}/info.json".format(self.save_path))
         self.V = len(word2indx)
-
+        self.word2idx = word2indx
         print("Finished loading skipgrams:")
         print("Positive words: {}".format(pos_words.shape))
         print("Negative words: {}".format(neg_words.shape))
@@ -169,9 +169,9 @@ class Word2VecModel(WordEmbeddingModel.WordEmbeddingModel):
         self.save()
 
 if __name__ == '__main__':
-    model = Word2VecModel(2000, 100)
-    # model.generate_skip_grams(verbose=True, file_count=2)
-    # model.train(lr_max=0.2, lr_min=0.01, epochs=50, batch_size=100)
+    model = Word2VecModel(10000, 300)
+    model.generate_skip_grams(verbose=True, file_count=30)
+    # model.train(lr_max=0.2, lr_min=0.01, epochs=50, batch_size=1000)
     model.load()
     model.generate_analogies()
 
@@ -179,5 +179,5 @@ if __name__ == '__main__':
 # remove start and end token - DONE
 # randomise order the batches are in
 # add more negative words than positive
-# expand vocab
-# expand file count
+# expand vocab - DONE
+# expand file count - DONE

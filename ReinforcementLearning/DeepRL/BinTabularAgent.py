@@ -3,6 +3,7 @@ import random
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 class BinTabularAgent():
     def __init__(self, env_name, state_bins, actions, lr=0.01, gamma=0.9, e=1):
         self.actions = actions
@@ -62,11 +63,8 @@ class BinTabularAgent():
 
                 s_, r, done, info = self.env.step(a)
 
-
-
                 if done and t < 499:
                     r = -500
-
 
                 episode_reward += r
                 if episode_reward > longest:
@@ -90,7 +88,10 @@ class BinTabularAgent():
         plt.show()
 
     def print_progress(self, i, average_reward, epsilon, longest):
-        print("Episode {}, av reward: {} | lr: {} | e: {} | longest: {}".format(i, average_reward, self.lr, epsilon, longest))
+        print("Episode {}, av reward: {} | lr: {} | e: {} | longest: {}".format(i, average_reward, self.lr, epsilon,
+                                                                                longest))
+
+
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
 import numpy as np
 import tensorflow as tf
-from WordEmbedding import WordEmbeddingModel
+from WordEmbeddingModel import WordEmbeddingModel
 
 
-class TFGloVeModel(WordEmbeddingModel.WordEmbeddingModel):
+class TFGloVeModel(WordEmbeddingModel):
     def __init__(self, V, D, from_file=True):
         super().__init__(V, D, savePath="TFGloveModel")
         self.logX = None
@@ -30,7 +30,7 @@ class TFGloVeModel(WordEmbeddingModel.WordEmbeddingModel):
         except:
             print("error loading model")
 
-    def train(self, epochs=10, lr=0.0001):
+    def train(self, epochs=10, lr_max=0.1, lr_min=0.01):
         Fx = self.Fx
         logX = self.logX
         V = self.V
@@ -52,9 +52,10 @@ class TFGloVeModel(WordEmbeddingModel.WordEmbeddingModel):
         mu = tf.convert_to_tensor(logX.mean().astype(np.float32))
         logX = tf.convert_to_tensor(logX.astype(np.float32))
         Fx = tf.convert_to_tensor(Fx.astype(np.float32))
-
+        lr_delta = (lr_max - lr_min) / epochs
         losses = []
         for e in range(epochs):
+            lr = lr_max - (epochs * lr_delta)
             def loss():
                 difference = tf.matmul(W, tf.transpose(U)) + B + C + mu - logX
                 return tf.reduce_sum(difference * difference * Fx)
@@ -103,7 +104,7 @@ class TFGloVeModel(WordEmbeddingModel.WordEmbeddingModel):
         self.save()
 
 if __name__ == '__main__':
-    model = TFGloVeModel(2000,100)
-    # model.load_data()
-    model.train(epochs=100)
+    model = TFGloVeModel(10000,300)
+    model.load_data( context_size=10, file_count=31)
+    model.train(epochs=200)
     model.generate_analogies()

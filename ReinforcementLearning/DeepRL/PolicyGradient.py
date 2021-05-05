@@ -12,7 +12,7 @@ class PolicyModel:
         self.lr = lr
 
         for (dim_in, dim_out, activation, bias) in layers:
-            layer = torch.nn.Linear(dim_in, dim_out, bias=bias)
+            layer = torch.nn.Linear(dim_in, dim_out, bias=bias).to(torch.device(device))
             self.params += layer.parameters()
             self.layers.append(layer)
             self.activations.append(activation)
@@ -22,7 +22,7 @@ class PolicyModel:
         self.optim = torch.optim.Adam(self.params, lr=lr)
 
     def forwards(self, state):
-        h = torch.tensor(state, dtype=torch.float32)
+        h = torch.tensor(state, dtype=torch.float32).to(torch.device(device))
         for (layer, activation) in zip(self.layers, self.activations):
             h = layer(h)
             if activation is not None:
@@ -34,8 +34,8 @@ class PolicyModel:
         return np.random.choice(p_actions.shape[0], p=p_actions)
 
     def fit(self, advantages, states, actions):
-        advantage = torch.tensor(advantages)  # T x 1
-        actions = torch.tensor(actions)  # T x 1
+        advantage = torch.tensor(advantages).to(torch.device(device))  # T x 1
+        actions = torch.tensor(actions).to(torch.device(device))  # T x 1
 
         self.optim.zero_grad()
 
@@ -48,7 +48,7 @@ class PolicyModel:
         self.optim.step()
 
     def predict(self, state):
-        return self.forwards(state).detach().numpy()
+        return self.forwards(state).cpu().detach().numpy()
 
 
 class ContinuousActionPolicyModel:
@@ -62,20 +62,20 @@ class ContinuousActionPolicyModel:
         self.H = layers[-1][1]
 
         mu_init = np.random.randn(self.H, 1)
-        self.mu = torch.tensor(mu_init.astype(np.float32))
+        self.mu = torch.tensor(mu_init.astype(np.float32)).to(torch.device(device))
         self.params.append(self.mu)
 
         v_init = np.random.randn(self.H, 1)
-        self.v = torch.tensor(v_init.astype(np.float32))
+        self.v = torch.tensor(v_init.astype(np.float32)).to(torch.device(device))
         self.params.append(self.v)
 
         for (dim_in, dim_out, activation, bias) in layers:
-            layer = torch.nn.Linear(dim_in, dim_out, bias=bias)
+            layer = torch.nn.Linear(dim_in, dim_out, bias=bias).to(torch.device(device))
             self.params += layer.parameters()
             self.layers_mu.append(layer)
 
         for (dim_in, dim_out, activation, bias) in layers:
-            layer = torch.nn.Linear(dim_in, dim_out, bias=bias)
+            layer = torch.nn.Linear(dim_in, dim_out, bias=bias).to(torch.device(device))
             self.params += layer.parameters()
             self.layers_v.append(layer)
             self.activations.append(activation)
@@ -89,7 +89,7 @@ class ContinuousActionPolicyModel:
 
     def forwards(self, state):
         # find mu
-        h_mu = torch.tensor(state, dtype=torch.float32)
+        h_mu = torch.tensor(state, dtype=torch.float32).to(torch.device(device))
         for (layer, activation) in zip(self.layers_mu, self.activations):
             h_mu = layer(h_mu)
             if activation is not None:
@@ -99,7 +99,7 @@ class ContinuousActionPolicyModel:
         mu = torch.matmul(h_mu, self.mu)  # T x 1
 
         # find v
-        h_v = torch.tensor(state, dtype=torch.float32)
+        h_v = torch.tensor(state, dtype=torch.float32).to(torch.device(device))
         for (layer, activation) in zip(self.layers_v, self.activations):
             h_v = layer(h_v)
             if activation is not None:
@@ -115,7 +115,7 @@ class ContinuousActionPolicyModel:
         return Z
 
     def fit(self, advantages, states, actions):
-        advantage = torch.tensor(advantages)  # T x 1
+        advantage = torch.tensor(advantages).to(torch.device(device))  # T x 1
 
         self.optim.zero_grad()
 
@@ -127,7 +127,7 @@ class ContinuousActionPolicyModel:
         self.optim.step()
 
     def predict(self, state):
-        return self.forwards(state).detach().numpy()
+        return self.forwards(state).cpu().detach().numpy()
 
     def chose_action(self, s):
         t = self.predict(s)
@@ -153,18 +153,18 @@ class ValueModel:
         self.lr = lr
 
         for (dim_in, dim_out, activation, bias) in layers:
-            layer = torch.nn.Linear(dim_in, dim_out, bias=bias)
+            layer = torch.nn.Linear(dim_in, dim_out, bias=bias).to(torch.device(device))
             self.params += layer.parameters()
             self.layers.append(layer)
             self.activations.append(activation)
 
         assert len(self.activations) == len(self.layers)
 
-        self.criterion = torch.nn.MSELoss()
+        self.criterion = torch.nn.MSELoss().to(torch.device(device)).to(torch.device(device))
         self.optim = torch.optim.Adam(self.params, lr=lr)
 
     def forwards(self, X):
-        h = torch.tensor(X, dtype=torch.float32)
+        h = torch.tensor(X, dtype=torch.float32).to(torch.device(device))
         for (layer, activation) in zip(self.layers, self.activations):
             h = layer(h)
             if activation is not None:
@@ -172,13 +172,16 @@ class ValueModel:
         return h
 
     def predict(self, X):
-        return self.forwards(X).detach().numpy()
+        return self.forwards(X).cpu().detach().numpy()
 
     def partial_fit(self, X, Y):
         self.optim.zero_grad()
 
+        target = torch.tensor([Y], dtype=torch.float32).to(torch.device(device))
+        target = torch.transpose(target, 0, 1)
+
         prediction = self.forwards(X)
-        target = torch.transpose(torch.tensor([Y], dtype=torch.float32), 0, 1)
+
         loss = self.criterion(prediction, target)
         loss.backward()
 
@@ -216,7 +219,7 @@ class Agent:
             if done and t > overide_done - 2:
                 return states, actions, rewards
 
-    def train_mc(self, episodes=1000, max_iter=1000, pritn_freq=100, overide_done=2000):
+    def train_mc(self, episodes=1000, max_iter=2000, pritn_freq=100, overide_done=0):
         av_reward = 0
         for i in range(episodes):
 
@@ -330,7 +333,7 @@ def run_discrete_mountain_car(use_td=False):
     if use_td:
         agent.train_td(max_iter=1000, episodes=1000, pritn_freq=10)
     else:
-        agent.train_mc(max_iter=2000, episodes=1000, pritn_freq=10, overide_done=2000)
+        agent.train_mc(max_iter=20000, episodes=1000, pritn_freq=10, overide_done=20000)
 
 
 def run_continous_mountain_car(use_td=False, use_gd=True):
@@ -364,7 +367,7 @@ def run_continous_mountain_car(use_td=False, use_gd=True):
 
     if use_gd:
         if use_td:
-            agent.train_td()
+            agent.train_td(max_iter=2000, episodes=10000, pritn_freq=10)
         else:
             agent.train_mc(max_iter=2000, episodes=10000, overide_done=2000, pritn_freq=10)
     else:
@@ -404,6 +407,9 @@ def run_continous_mountain_car(use_td=False, use_gd=True):
 
 
 if __name__ == "__main__":
-    # run_discrete_cartpole(use_td=True)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
+
+    # run_discrete_cartpole(use_td=False)
     # run_continous_mountain_car(use_gd=True, use_td=False)
     run_discrete_mountain_car(use_td=False)

@@ -17,7 +17,6 @@ class WordEmbeddingModel:
         pass
 
     def generate_analogies(self):
-
         self.idx2word = {i: w for w, i in self.word2idx.items()}
 
         print("***** GENRATING ANALOGIES *****")
@@ -188,3 +187,6 @@ class WordEmbeddingModel:
         self.word2idx = word2indx_small
 
         return sentences_small, word2indx_small
+
+if __name__ == '__main__':
+    print("hey")
