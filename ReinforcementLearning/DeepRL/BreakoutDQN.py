@@ -260,8 +260,8 @@ def train(agent, target_network, min_size, episodes=1000, update_freq=1000, prit
             reward_log[i] = [total_time, train_time, image_time, reward, play_time, steps, epsilon]
 
             if i % (pritn_freq * 100) == 0:
-                np.save("reward-log-3.npy", reward_log)
-                torch.save(agent.V, "agent.pt")
+                np.save("reward-log-final.npy", reward_log)
+                torch.save(agent.V, "agent-final-{}.pt".format(i))
 
             av_reward = 0
             av_train_time = 0
@@ -281,7 +281,7 @@ def smooth(x):
 
 
 def plot_smoothed_return():
-    reward_log = np.load("reward-log-3.npy")
+    reward_log = np.load("reward-log-final.npy")
     episode_rewards = reward_log[:, 3]
 
     # Plot the smoothed returns
@@ -290,6 +290,23 @@ def plot_smoothed_return():
     plt.plot(y, label='smoothed')
     plt.legend()
     plt.show()
+
+
+def run_random(episodes=20):
+    env_name = "Breakout-v0"
+    env = gym.make(env_name)
+    for i in range(episodes):
+        done = False
+        s = env.reset()
+
+        while not done:
+            env.render()
+
+            a = env.action_space.sample()
+
+            s_, r, done, info = env.step(a)
+
+            s = s_
 
 
 def run_from_file(episodes=20):
@@ -304,21 +321,36 @@ def run_from_file(episodes=20):
                                   frame_dimensions=img_dimensions)
 
     agent = BreakoutAgent(env, V, experience)
+    e = 0
 
     for i in range(episodes):
         done = False
-        s = env.reset()
 
+        s = env.reset()
+        action = None
+        count = 0
         while not done:
             env.render()
 
             f = agent.state_to_frame(s)
 
-            a = agent.chose_action(f, 0)
+            if count % 100 == 0:
+                a = 1
+            elif random.random() < e:
+                a = agent.env.action_space.sample()
+            else:
+                a = agent.chose_action(f, 0)
+
+
             s_, r, done, info = agent.env.step(a)
+
             agent.experience.add(f, a, r, done)
 
             s = s_
+
+            count += 1
+
+
 
 
 def run_breakout():
@@ -350,7 +382,7 @@ def run_breakout():
     train(agent,
           target_net,
           min_size=50000,
-          episodes=8000,
+          episodes=16000,
           pritn_freq=10,
           update_freq=10000,
           train_freq=4)  # 1)
@@ -362,4 +394,6 @@ if __name__ == "__main__":
     # run_breakout()
 
     # plot_smoothed_return()
+    #
     run_from_file()
+    # run_random()

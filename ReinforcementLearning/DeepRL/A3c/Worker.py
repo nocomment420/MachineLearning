@@ -244,7 +244,7 @@ class Worker(mp.Process):
             returns.append(G)
             states.append(step.state)
             actions.append(step.action)
-        g = list(self.local_network.parameters())
+
         returns.reverse()
         states.reverse()
         actions.reverse()
@@ -292,11 +292,16 @@ class Worker(mp.Process):
 
         current_state = self.repeat_frame(self.process_image(self.env.reset()))
         steps = []
-
+        count = 0
         while True:
             for t in range(self.n_steps):
                 # play game
-                action = self.local_network.chose_action([current_state])
+                count += 1
+                if count + 1 % 100 == 0:
+                    count = 0
+                    action = 1
+                else:
+                    action = self.local_network.chose_action([current_state])
 
                 s_, r, done, info = self.env.step(action)
 
@@ -315,7 +320,7 @@ class Worker(mp.Process):
                         return
 
                 # if game over break
-                if done or episode_steps > 1000:
+                if done:
                     self.episode_count += 1
                     total_time = (datetime.datetime.now() - episode_start).seconds
 
