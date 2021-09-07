@@ -1,5 +1,5 @@
-from Networks import ActorCriticModel
-from Worker import Worker
+from Networks import ActorCriticModel, ActorCriticModel3
+from Worker import Worker, Worker3
 import torch.multiprocessing as mp
 from SharedAdam import SharedAdam
 
@@ -22,15 +22,17 @@ if __name__ == "__main__":
     image_dim = [84, 84]
     color_dim = 4
     n_classes = 4
-    lr = 1e-4
+    lr = 0.001
+    # lr = 1e-4
     C = 0.01
 
-    global_network = ActorCriticModel(image_dim, color_dim, n_classes, C)
+    global_network = ActorCriticModel3(image_dim, color_dim, n_classes, C, lr)
+    # global_network = ActorCriticModel(image_dim, color_dim, n_classes, C)
     global_network.share_memory()
-    global_optimiser = SharedAdam(global_network.parameters(), lr=lr)
+    # global_optimiser = SharedAdam(global_network.parameters(), lr=lr)
 
     # Worker Params
-    n_steps = 15
+    n_steps = 5
     frame_dimensions = [84, 84]
     gamma = 0.99
     env_name = "Breakout-v0"
@@ -40,8 +42,9 @@ if __name__ == "__main__":
     for i in range(num_workers):
         color = colours[i % len(colours)]
         worker_id = "worker_{}".format(i + 1)
-        local_network = ActorCriticModel(image_dim, color_dim, n_classes, C)
-        worker = Worker(worker_id, env_name, global_network, local_network,global_optimiser, global_iter, max_total_steps, n_steps, gamma,
+        # local_network = ActorCriticModel(image_dim, color_dim, n_classes, C)
+        local_network = ActorCriticModel3(image_dim, color_dim, n_classes, C, lr)
+        worker = Worker3(worker_id, env_name, global_network, local_network, global_iter, max_total_steps, n_steps, gamma,
                         color)
         workers.append(worker)
 

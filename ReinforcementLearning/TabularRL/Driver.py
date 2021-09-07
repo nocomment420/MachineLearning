@@ -1,9 +1,9 @@
-from ReinforcementLearning.GridWorld import Grid
-from ReinforcementLearning.QLearning import QLearning
-from ReinforcementLearning.Sarsa import Sarsa
-from ReinforcementLearning.MonteCarloLearning import MonteCarloLearningAlgorithm
-from ReinforcementLearning.DPLearning import DPLearning
-from ReinforcementLearning.TemporalDifferenceLearning import TD0
+from ReinforcementLearning.TabularRL.GridWorld import Grid
+from ReinforcementLearning.TabularRL.QLearning import QLearning
+from ReinforcementLearning.TabularRL.Sarsa import Sarsa
+from ReinforcementLearning.TabularRL.MonteCarloLearning import MonteCarloLearningAlgorithm
+from ReinforcementLearning.TabularRL.DPLearning import DPLearning
+from ReinforcementLearning.TabularRL.TemporalDifferenceLearning import TD0
 
 def hard_grid():
     g = Grid(10, 10, [0, 4])

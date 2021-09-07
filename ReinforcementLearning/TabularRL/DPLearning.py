@@ -1,4 +1,4 @@
-from ReinforcementLearning.ValueEquationSolver import ValueEquationSolver
+from ReinforcementLearning.TabularRL.ValueEquationSolver import ValueEquationSolver
 
 class DPLearning(ValueEquationSolver):
     def __init__(self, grid):
