@@ -26,6 +26,7 @@ Various ML Projects
 - Toxic comment classification using Bi Directional LSTM
 - Numpy implemetations of word2vec and Glove
 - Tree Neural Networks to do sentiment analysis (data from stanford nlp)
+- Chat bot using se22se2 with attention (not working very well)
 
 # RNN
 - Bi Directional LSTM for image classification
