@@ -2,8 +2,18 @@
 Various ML Projects
 
 ## ReinforcementLearning
-- TabularRL: A GridWorld environment to implement and test algorithms to solve State-Value and Action-Value problems
-- DeepRL: DQN for atari game breakout, as well as multiple A3C implementations for breakout
+- TabularRL: A GridWorld environment to implement and test algorithms:
+  - SARSA
+  - TD0
+  - Monte Carlo 
+  - Q Learning
+  - DYnamic Programming
+- DeepRL:
+  -  A3C for breakout
+  -  DQN for breakout
+  -  Policy Gradient for cartpole and mountain hill
+  -  ddpg
+  -  RBF agent for cartpole and mountain hill
 
 ## NeuralNetworks
 - Numpy implementation of a ANN
